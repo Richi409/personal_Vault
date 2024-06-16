@@ -158,3 +158,83 @@ curl -sSfL https://raw.githubusercontent.com/longhorn/longhorn/v1.6.2/scripts/en
     ```
     kubectl -n longhorn-system apply -f longhorn-ingress.yaml
     ```
+
+---
+
+## Creating a StorageClass
+For more Details refer to the [official Docs](https://longhorn.io/docs/1.6.2/nodes-and-volumes/volumes/create-volumes/)
+
+> While installing Longhorn will create a "longhorn" StorageClass.
+> In this StorageClass Replicas are set to "3".
+> Since I only have 2 Worker-Nodes this will throw an error becaus longhorn cant create a 3rd Replica.
+
+1. Create a StorageClass Manifest and apply it
+    ```yaml
+    kind: StorageClass
+    apiVersion: storage.k8s.io/v1
+    metadata:
+      name: longhorn-test
+    provisioner: driver.longhorn.io
+    allowVolumeExpansion: true
+    parameters:
+      numberOfReplicas: "2"
+      staleReplicaTimeout: "2880" # 48 hours in minutes
+      fromBackup: ""
+      fsType: "ext4"
+    #  mkfsParams: "-I 256 -b 4096 -O ^metadata_csum,^64bit"
+    #  diskSelector: "ssd,fast"
+    #  nodeSelector: "storage,fast"
+    #  recurringJobSelector: '[
+    #   {
+    #     "name":"snap",
+    #     "isGroup":true,
+    #   },
+    #   {
+    #     "name":"backup",
+    #     "isGroup":false,
+    #   }
+    #  ]'
+    ```
+2. Create a Pod that uses Longhorn Volumes and a corresponding PVC
+    ```yaml
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: longhorn-volv-pvc
+      namespace: default
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: longhorn-test
+      resources:
+        requests:
+          storage: 2Gi
+    ---
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: volume-test
+      namespace: default
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: volume-test
+        image: nginx:stable-alpine
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+              - ls
+              - /data/lost+found
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: volv
+          mountPath: /data
+        ports:
+        - containerPort: 80
+      volumes:
+      - name: volv
+        persistentVolumeClaim:
+          claimName: longhorn-volv-pvc
+    ```
