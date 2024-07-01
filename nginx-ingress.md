@@ -13,10 +13,27 @@ For Reference also see the [Guide](https://kubernetes.github.io/ingress-nginx/de
     helm search repo ingress-nginx --versions
     ```
     
+## Installing with Helm
 
-## Creating a template with helm
-> You could also just `helm install` but with this method you have you can save the configuration in YAML format first and then `kubectl apply -f <file>`
+1. Create a custom `values.yaml`
+    ```yaml
+    controller:
+        extraArgs:
+            default-ssl-certificate: "<namespace>/<secret-name>"
+        service:
+            loadBalancerIP: "<IPv4-Address>"
+    ```
+2. Install nginx-ingress
+    ```
+    helm install ingress-nginx ingress-nginx \
+    --repo https://kubernetes.github.io/ingress-nginx \
+    --version <CHART_VERSION> \
+    --namespace ingress-nginx --create-namespace\
+    -f ./values.yaml
+    ```
 
+
+## Alternatively create a template with helm
 - Create the template as follows:
     ```
     helm template ingress-nginx ingress-nginx \
@@ -26,16 +43,17 @@ For Reference also see the [Guide](https://kubernetes.github.io/ingress-nginx/de
     > ./nginx-ingress_<APP_VERSION>.yaml
     ```
 
-## Deploy the nginx ingress controller
-- Create the namespace:
-    ```
-    kubectl create namespace ingress-nginx
-    ```
-- apply the manifest file
-    > if you wish to assign a static IP to your nginx-ingress-controller then add `loadBalancerIP: <IP-Address>` to your LoadBalancer Service under `spec:`
-    ```
-    kubectl aplly -f /path/to/nginx-ingress_<APP_VERSION>.yaml
-    ```
+### Create the namespace
+```
+kubectl create namespace ingress-nginx
+```
+
+### Apply the manifest file
+> if you wish to assign a static IP to your nginx-ingress-controller then add `loadBalancerIP: <IP-Address>` to your LoadBalancer Service under `spec:` <br/>
+> generally edit the manifest for custom settings
+```
+kubectl aplly -f /path/to/nginx-ingress_<APP_VERSION>.yaml
+```
 
 ## Example Service Using the ingress controller
 Make sure to set `ingressClassName to nginx` this tells kubernetes to use the nginx-ingress controller as the ingress controller
