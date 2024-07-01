@@ -32,6 +32,12 @@ For Reference also see the [Guide](https://kubernetes.github.io/ingress-nginx/de
     -f ./values.yaml
     ```
 
+### Upgrading deployment
+> use to upgrade the version or to update configuration using the `values.yaml`
+```yaml
+helm upgrade ingress-nginx ingress-nginx --repo https://kubernetes.github.io/ingress-nginx --version <CHART_VERSION> --namespace ingress-nginx -f ./values.yaml
+```
+
 
 ## Alternatively create a template with helm
 - Create the template as follows:
