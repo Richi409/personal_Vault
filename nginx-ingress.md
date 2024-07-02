@@ -16,12 +16,20 @@ For Reference also see the [Guide](https://kubernetes.github.io/ingress-nginx/de
 ## Installing with Helm
 
 1. Create a custom `values.yaml`
+- setting the default certificate
+- setting static loadbalancer ip
+- specifying address-pool used by the loadbalancer service
+- marking the loadbalancer to allow sharing the ip with other loadbalancer services
+
     ```yaml
     controller:
-        extraArgs:
-            default-ssl-certificate: "<namespace>/<secret-name>"
-        service:
-            loadBalancerIP: "<IPv4-Address>"
+      extraArgs:
+        default-ssl-certificate: "default/acmedns-certificate"
+      service:
+        loadBalancerIP: "192.168.2.20"
+        annotations:
+          metallb.universe.tf/address-pool: "addr-pool"
+          metallb.universe.tf/allow-shared-ip: "ingress-nginx-loadbalancer"
     ```
 2. Install nginx-ingress
     ```
@@ -33,9 +41,13 @@ For Reference also see the [Guide](https://kubernetes.github.io/ingress-nginx/de
     ```
 
 ### Upgrading deployment
-> use to upgrade the version or to update configuration using the `values.yaml`
 ```yaml
 helm upgrade ingress-nginx ingress-nginx --repo https://kubernetes.github.io/ingress-nginx --version <CHART_VERSION> --namespace ingress-nginx -f ./values.yaml
+```
+
+### Updating (upgrading) Configuration
+```yaml
+helm upgrade -n ingress-nginx ingress-nginx ingress-nginx --repo https://kubernetes.github.io/ingress-nginx -f ./values.yaml
 ```
 
 
