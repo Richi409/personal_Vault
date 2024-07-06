@@ -95,9 +95,16 @@
 ## Creating Kubernetes Cluster
 
 > :heavy_exclamation_mark: only run this on the master node
-- Initializing Kubernetes Cluster
+- Initializing Kubernetes Cluster (Single Master Node)
     ```
     sudo kubeadm init --control-plane-endpoint=<ip-of control-plane node> --node-name <control-plane node host-name> --pod-network-cidr=10.244.0.0/16
+    ```
+- Initializing Kubernetes Cluster (Multiple Master Nodes)
+    ```
+    sudo kubeadm init --control-plane-endpoint=<ip-of control-plane node> \
+    --node-name <control-plane node host-name> \
+    --pod-network-cidr=10.244.0.0/16 \
+    --upload-certs
     ```
 - run 
     - `mkdir -p $HOME/.kube`
