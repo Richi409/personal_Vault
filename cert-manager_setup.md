@@ -8,7 +8,7 @@ Please refer to the [official Documentation](https://cert-manager.io/docs/instal
     ```
 2. Searchin for the newest version
     ```
-    helm search repo jetstack --versions | head -2
+    helm search repo jetstack/cert-manager --versions | head -2
     ```
 3. Using the helm chart to install cert-manager
     ```
@@ -21,6 +21,7 @@ Please refer to the [official Documentation](https://cert-manager.io/docs/instal
     ```
 
 ## Issuing Certificates
+> Refer to this [Article](https://cert-manager.io/docs/usage/ingress/) for useful information
 1. Register at an ACMEDNS Server
     ```
     curl -X POST https://auth.acme-dns.io/register
