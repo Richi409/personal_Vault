@@ -43,6 +43,7 @@ metadata:
 ## Example Deployment with LoadBalancer Service
 ### Deployment
 ```yaml
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
