@@ -36,7 +36,7 @@ For Reference also see the [Guide](https://kubernetes.github.io/ingress-nginx/de
     helm install ingress-nginx ingress-nginx \
     --repo https://kubernetes.github.io/ingress-nginx \
     --version <CHART_VERSION> \
-    --namespace ingress-nginx --create-namespace\
+    --namespace ingress-nginx --create-namespace \
     -f ./values.yaml
     ```
 
