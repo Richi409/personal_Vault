@@ -53,7 +53,7 @@ Please refer to the [official Documentation](https://cert-manager.io/docs/instal
 4. Create a secret
     - Use the json file from Step 2 for this
     ```
-    kubectl create secret generic acme-dns --from-file acmedns.json
+    kubectl -n cert-manager create secret generic <SECRET_NAME> --from-file acmedns.json
     ```
 5. Create an Issuer and a Certificate
     ```yaml
@@ -67,23 +67,26 @@ Please refer to the [official Documentation](https://cert-manager.io/docs/instal
             # server: https://acme-v02.api.letsencrypt.org/directory
             server: https://acme-staging-v02.api.letsencrypt.org/directory
             privateKeySecretRef:
-                name: cm-le-key
+                name: <LETSENCRYPT_ACCOUNT_SECRET_NAME>
             solvers:
             - dns01:
                 acmeDNS:
                     host: https://auth.acme-dns.io
                     accountSecretRef:
-                        name: acme-dns
+                        name: <SECRET_NAME>
                         key: acmedns.json
-    ---
+    ```
+6. Create a Certificate
+    ```yaml
     apiVersion: cert-manager.io/v1
     kind: Certificate
     metadata:
         name: acmedns-certificate
+        # namespce: <NAMESPACE_NAME>
     spec:
         issuerRef:
-            name: acme-issuer
-        secretName: acmedns-certificate
+            name: <ISSUER_NAME>
+        secretName: <SECRET_NAME_FOR_CERTIFICATE>
         dnsNames:
             - "<domain 1>"
             - "<domain 2>"
@@ -156,4 +159,4 @@ Please refer to the [official Documentation](https://cert-manager.io/docs/instal
             name: ss-ca-issuer
             kind: ClusterIssuer
             group: cert-manager.io
-```
+    ```
