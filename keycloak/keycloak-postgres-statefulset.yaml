@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: keycloak-psql
+  namespace: keycloak
+spec:
+  serviceName: keycloak-psql-svc
+  selector:
+    matchLabels:
+      app: keycloak-psql
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: keycloak-psql
+    spec:
+      containers:
+        - name: postgresql-db
+          image: postgres:15
+          volumeMounts:
+            - name: cache-volume
+              mountPath: /data
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-postgres-credentials
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-postgres-credentials
+                  key: POSTGRES_PASSWORD
+            - name: PGDATA
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-postgres-credentials
+                  key: PGDATA
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-postgres-credentials
+                  key: POSTGRES_DB
+  volumeClaimTemplates:
+    - metadata:
+        name: cache-volume
+      spec:
+        storageClassName: "longhorn"
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak-psql
+  namespace: keycloak
+spec:
+  selector:
+    app: keycloak-psql
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+

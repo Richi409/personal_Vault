@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak-web
+  namespace: keycloak
+  labels:
+    app: keycloak
+spec:
+  type: ClusterIP
+  selector:
+    app: keycloak
+  ports:
+    - name: keycloak-web
+      port: 8080
+      targetPort: keycloak-http
+      # targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: keycloak-ingress
+  namespace: keycloak
+  # annotations:
+  #   nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: keycloak.rm-hlab.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: keycloak-web
+                port:
+                  number: 8080
+  tls:
+    - hosts:
+      - keycloak.rm-hlab.com
