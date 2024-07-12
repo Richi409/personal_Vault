@@ -25,7 +25,7 @@ spec:
       containers:
         - name: keycloak
           image: quay.io/keycloak/keycloak:25.0
-          args: ["start-dev"]
+          args: ["start"] #, "--spi-login-protocol-openid-connect-legacy-logout-redirect-uri=true"]
           imagePullPolicy: IfNotPresent
           env:
             - name: KEYCLOAK_ADMIN
@@ -41,13 +41,6 @@ spec:
 
             - name: KC_DB
               value: "postgres"
-            # - name: POSTGRES_DB
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: keycloak-postgres-credentials
-            #       key: POSTGRES_DB
-            - name: KC_DB_URL
-              value: "jdbc:postgres://keycloak-psql:5432/keycloak"
             - name: KC_DB_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -58,6 +51,13 @@ spec:
                 secretKeyRef:
                   name: keycloak-postgres-credentials
                   key: POSTGRES_PASSWORD
+            # - name: POSTGRES_DB
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: keycloak-postgres-credentials
+            #       key: POSTGRES_DB
+            - name: KC_DB_URL
+              value: 'jdbc:postgresql://keycloak-psql:5432/keycloak'
             - name: KC_DB_URL_HOST
               value: keycloak-psql
             - name: KC_DB_URL_PORT
@@ -71,11 +71,22 @@ spec:
               value: "true"
             - name: KC_HEALTH_ENABLED
               value: "true"
+            - name: KC_CACHE
+              value: "ispn"
+            - name: KC_CACHE_STACK
+              value: "kubernetes"
+            - name: KC_TRANSACTION_XA_ENABLED
+              value: "true"
 
-            # - name: KC_PROXY
-            #   value: "edge"
-            # - name: KC_HOSTNAME_STRICT_HTTPS
-            #   value: "true"
+            - name: JAVA_OPTS_APPEND
+              value: >-
+                -Djgroups.dns.query=keycloak-web
+            - name: KC_PROXY
+              value: "edge"
+            - name: KC_HOSTNAME
+              value: keycloak.rm-hlab.com
+            - name: KC_HOSTNAME_STRICT_HTTPS
+              value: "true"
             # - name: TZ
             #   value: 'Europe/Berlin'
           ports:
@@ -89,15 +100,17 @@ spec:
             httpGet:
               path: /realms/master
               port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 1
           # readinessProbe:
           #   httpGet:
           #     path: /health/ready
           #     port: 8080
           #   initialDelaySeconds: 250
           #   periodSeconds: 10
-          # livenessProbe:
-          #   httpGet:
-          #     path: /health/live
-          #     port: 8080
-          #   initialDelaySeconds: 500
-          #   periodSeconds: 30
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            initialDelaySeconds: 500
+            periodSeconds: 30
