@@ -1,10 +1,163 @@
 # How to setup pihole in Kubernetes
-You can install pihole using the [pihole-kubernetes](https://github.com/MoJo2600/pihole-kubernetes) Repository...
+## Deploying pihole using helm
+Check out the github [repository](https://github.com/MoJo2600/pihole-kubernetes) for more information
+
+1. Add the repository
+    ```
+    helm repo add mojo2600 https://mojo2600.github.io/pihole-kubernetes/
+    helm repo update
+    ```
+2. create a `values.yaml`
+    ```yaml
+    serviceDns:
+      mixedService: false
+      type: LoadBalancer
+      port: 53
+      externalTrafficPolicy: Cluster
+      loadBalancerIP: 192.168.2.51
+      annotations:
+        metallb.universe.tf/address-pool: <ADDR_POOL_NAME>
+        metallb.universe.tf/allow-shared-ip: <SHARED_IP_ANNOTATION_NAME>
+    
+    serviceDhcp:
+      enabled: false
+    
+    serviceWeb:
+      http:
+        enabled: true
+        port: 80
+      https:
+        enabled: false
+      type: ClusterIP
+      externalTrafficPolicy: Local
+    
+    virtualHost: pi.hole
+    
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      path: /
+      hosts:
+        - <FQDN>
+      tls:
+        - hosts:
+          - <FQDN>
+    
+    persistentVolumeClaim:
+      enabled: true
+      accessModes:
+        - ReadWriteOnce
+      size: "500Mi"
+      storageClass: "longhorn"
+    
+    adminPassword: "admin"
+    
+    # -- Use an existing secret for the admin password.
+    admin:
+      # -- If set to false admin password will be disabled, adminPassword specified above and the pre-existing secret (if specified) will be ignored.
+      enabled: true
+      # -- Specify an existing secret to use as admin password
+      existingSecret: ""
+      # -- Specify the key inside the secret to use
+      passwordKey: "password"
+    ```
+3. Install pihole
+    ```
+    helm install pihole mojo2600/pihole --namespace pihole --create-namepsace -f values.yaml
+    ```
+
+### Deploying `external-dns`
+external-dns automatically creates A-Records for existing ingress objects.
+
+```yaml
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: external-dns
+  namespace: pihole
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: external-dns
+  namespace: pihole
+rules:
+- apiGroups: [""]
+  resources: ["services","endpoints","pods"]
+  verbs: ["get","watch","list"]
+- apiGroups: ["extensions","networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get","watch","list"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["list","watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: external-dns-viewer
+  namespace: pihole
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: external-dns
+subjects:
+- kind: ServiceAccount
+  name: external-dns
+  namespace: pihole
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: external-dns
+  namespace: pihole
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: external-dns
+  template:
+    metadata:
+      labels:
+        app: external-dns
+    spec:
+      serviceAccountName: external-dns
+      containers:
+      - name: external-dns
+        image: registry.k8s.io/external-dns/external-dns:v0.14.2
+        # If authentication is disabled and/or you didn't create
+        # a secret, you can remove this block.
+        # envFrom:
+        # - secretRef:
+        #     # Change this if you gave the secret a different name
+        #     name: pihole-password
+        env:
+          - name: EXTERNAL_DNS_PIHOLE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: pihole-password
+                key: password
+
+        args:
+        - --source=service
+        - --source=ingress
+        # Pihole only supports A/AAAA/CNAME records so there is no mechanism to track ownership.
+        # You don't need to set this flag, but if you leave it unset, you will receive warning
+        # logs when ExternalDNS attempts to create TXT records.
+        - --registry=noop
+        # IMPORTANT: If you have records that you manage manually in Pi-hole, set
+        # the policy to upsert-only so they do not get deleted.
+        - --policy=upsert-only
+        - --provider=pihole
+        # Change this to the actual address of your Pi-hole web server
+        - --pihole-server=http://pihole-web.pihole.svc.cluster.local
+      securityContext:
+        fsGroup: 65534 # For ExternalDNS to be able to read Kubernetes token files
 ```
-helm repo add mojo2600 https://mojo2600.github.io/pihole-kubernetes/
-helm repo update
-```
-or create the manifest files by yourself.
+
+
 
 ## Deploying pihole using Yaml-Manifests
 ### Create a seperate namespace
