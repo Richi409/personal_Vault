@@ -66,7 +66,31 @@ Check out the github [repository](https://github.com/MoJo2600/pihole-kubernetes)
     helm install pihole mojo2600/pihole --namespace pihole --create-namepsace -f values.yaml
     ```
 
-### Deploying `external-dns`
+### Deploying `external-dns` using Helm
+
+1. Add the `bitnami` helm repository
+    ```
+    helm repo add bitnami https://charts.bitnami.com/bitnami
+    helm repo update
+    ```
+2. create a `values.yaml`
+    ```yaml
+    provider: pihole
+    pihole:
+      server: "http://pihole-web.pihole.svc.cluster.local"
+    extraEnvVars:
+      - name: EXTERNAL_DNS_PIHOLE_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: pihole-password
+            key: password
+    ```
+3. Install the helm chart
+    ```
+    helm install external-dns bitnami/external-dns --namespace pihole -f values.yaml
+    ```
+
+### Deploying `external-dns` using Yaml-Manifests
 external-dns automatically creates A-Records for existing ingress objects.
 
 ```yaml
