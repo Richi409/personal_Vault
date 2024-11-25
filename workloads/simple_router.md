@@ -52,6 +52,73 @@
 3. enable IPv4 Forwarding
     - uncomment `net.ipv4.ip_forward=1` in the file `/etc/sysctl.conf`
 
+4. Provide a `nftables.conf`
+    ```
+    #!/usr/sbin/nft -f
+
+    flush ruleset
+    
+    table inet filter {
+    	chain input {
+    		type filter hook input priority filter; policy drop;
+    		
+    		# allow loopback
+    		iifname "lo" accept
+    		
+    		# allow established and related connections
+    		ct state established,related accept
+    		
+    		# drop invalid packages
+    		ct state invalid drop
+    
+    		# allow icmpv4
+    		ip protocol icmp accept
+    		# allow icmpv4
+    		ip6 nexthdr icmpv6 accept
+    		
+    		# allow ssh to this "router"
+    		tcp dport 22 accept
+    	}
+    
+    	chain forward {
+    		type filter hook forward priority filter; policy drop;
+    		
+    		# allow forwarding from testnet to DMZ
+    		iifname "ens19" oifname "ens20" accept
+    
+    		# deny forwarding from DMZ to testnet
+    		iifname "ens20" oifname "ens19" drop
+    		
+    		# Explicitly allowing forwarding to homenet
+    		oifname "eth0" accept
+    		
+    		# allowing ssh from homenet to test-server
+    		iifname "eth0" oifname "ens20" ip daddr 192.168.4.21 tcp dport 22 accept;
+    
+    		# Allow forwarding from WAN to DMZ or testnet if initiated
+    		ct state established,related accept
+    	}
+    
+    	chain output {
+    		type filter hook output priority filter; policy accept;
+    	}
+    }
+    table ip nat {
+    	chain prerouting {
+    		type nat hook prerouting priority dstnat; policy accept;
+    		
+            # portforward packages coming in on Port 8022 on the homenet to Port 22 of the server
+    		iifname "eth0" tcp dport 8022 dnat to 192.168.4.21:22
+    	}
+    
+    	chain postrouting {
+    		type nat hook postrouting priority srcnat; policy accept;
+    
+    		oifname { "eth0" } masquerade   # everything exiting "eth0" gets masqueraded
+    	}
+    }
+    ```
+
 
 # Test Setup
 
