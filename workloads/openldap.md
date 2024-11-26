@@ -17,7 +17,7 @@
 - edit the file `/usr/share/slapd/slapd.init.ldif`
   - comment the line `include: file:///etc/ldap/schema/nis.ldif`
   - add the line `include: file:///etc/ldap/schema/rfc2307bis.ldif`
-- run `sudo dpkg-reconfigure slapd`
+- run `sudo dpkg-reconfigure -plow slapd`
     - Omit OpenLDAP Server Configuration? $\Rightarrow$ **NO**
     - DNS domain Name? $\Rightarrow$ **\<your-domain\>.\<root-domain\>**
     - Admin Password? $\Rightarrow$ provide a admin password
@@ -25,6 +25,15 @@
     - Move Old Database? $\Rightarrow$ **YES**
 - verify the used schemas
     ```bash
-    sudo ldapsearch -LLL -Y external -H ldapi:/// -b cn=schema,cn=config -s one dn
+    sudo ldapsearch -LLL -Y external -H ldapi:/// -b "cn=schema,cn=config" -s one dn
+    ```
+    ```bash
+        ldapsearch -LLL -Y EXTERNAL -H ldapi:/// -b "cn=config" dn
     ```
 
+
+## Webinterface phpldapadmin
+### Installation
+```bash
+sudo apt install phpldapadmin
+```
