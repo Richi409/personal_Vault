@@ -28,9 +28,12 @@
     sudo ldapsearch -LLL -Y external -H ldapi:/// -b "cn=schema,cn=config" -s one dn
     ```
     ```bash
-        ldapsearch -LLL -Y EXTERNAL -H ldapi:/// -b "cn=config" dn
+    ldapsearch -LLL -Y EXTERNAL -H ldapi:/// -b "cn=config" dn
     ```
 
+### Configure LDAPs using TLS
+1. Create a certificate following the certbot guide
+2. 
 
 ## Webinterface phpldapadmin
 ### Installation
