@@ -21,6 +21,7 @@
     - Omit OpenLDAP Server Configuration? $\Rightarrow$ **NO**
     - DNS domain Name? $\Rightarrow$ **\<your-domain\>.\<root-domain\>**
     - Admin Password? $\Rightarrow$ provide a admin password
+        - do not use any special characters if you plan to use `phpldapadmin`
     - Remove Database when purging slapd? $\Rightarrow$ **YES**
     - Move Old Database? $\Rightarrow$ **YES**
 - verify the used schemas
@@ -33,10 +34,67 @@
 
 ### Configure LDAPs using TLS
 1. Create a certificate following the certbot guide
-2. 
+2. Add Certificates using ldif
+    ```ldif
+    dn: cn=config
+    changetype: modify
+    replace: olcTLSCipherSuite
+    olcTLSCipherSuite: NORMAL
+    -
+    replace: olcTLSCRLCheck
+    olcTLSCRLCheck: none
+    -
+    replace: olcTLSVerifyClient
+    olcTLSVerifyClient: never
+    -
+    replace: olcTLSCertificateKeyFile
+    olcTLSCertificateKeyFile: </path/to/cert_key/file>
+    -
+    replace: olcTLSCertificateFile
+    olcTLSCertificateFile: </path/to/cert/file>
+    -
+    replace: olcTLSProtocolMin
+    olcTLSProtocolMin: 3.3
+    ```
+3. Edit the file `/etc/default/slapd`
+    - Make sure `ldaps://` is configured (Optional: disable `ldap://`
+        ```
+        SLAPD_SERVICES="ldaps:/// ldapi:///"
+        ```
+### Loading additional schemas
+- toDo
+
+### adding modules
+- toDo
+
+### Adding Rules to the ACL
+- toDo
+
+### Basic LDAP structure
+- toDo
 
 ## Webinterface phpldapadmin
 ### Installation
 ```bash
 sudo apt install phpldapadmin
 ```
+### Configuration
+- Configuration File: `/etc/phpldapadmin`
+- edit the following values:
+    - Servername
+        ```php
+        $servers->setValue('server','name','<Servername>');
+        ```
+    - Connection to LDAP Server
+        - use the socket if running on the same system as the LDAP Server
+            ```php
+            $servers->setValue('server','host','ldapi://%2frun%2fslapd%2fldapi');
+            ```
+    - set BaseDN
+        ```php
+        $servers->setValue('server','base',array('dc=<domain>,dc=<domain>'));
+        ```
+    - DN of Bind-User (Admin)
+        ```php
+        $servers->setValue('login','bind_id','cn=admin,dc=<domain>,dc=<domain>');
+        ```
