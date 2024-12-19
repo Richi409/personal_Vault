@@ -43,6 +43,10 @@
         ```bash
         sudo apt purge ifupdown
         ```
+    - enable and start `systemd-networkd` Service
+        ```bash
+        sudo systemctl enable --now systemd-networkd
+        ```
     - install required packages
         ```bash
         sudo apt install netplan.io systemd-resolved
