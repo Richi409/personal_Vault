@@ -37,7 +37,36 @@
     echo "-:ansible:LOCAL" | sudo tee -a /etc/security/access.conf
     ```
 8. Uncomment `account  required  pam_access.so` in `/etc/pam.d/login`
-9. Clean System
+9. Convert from `ifupdown` to `netplan` with `systemd-networkd` as backend
+    - cloud-init integrates best with `netplan`, while not working as good with classic `ifupdown` configuration
+    - uninstall `ifupdown`
+        ```bash
+        sudo apt purge ifupdown
+        ```
+    - install required packages
+        ```bash
+        sudo apt install netplan.io systemd-resolved
+        ```
+    - enable and start `systemd-resolved` Service
+        ```bash
+        sudo systemctl enable --now systemd-resolved
+        ```
+    - move old network configuration or remove it
+        ```bash
+        sudo mv /etc/network/interfaces /etc/network/interfaces.bak
+        ```
+        ```bash
+        sudo rm -r /etc/network/interfaces*
+        ```
+    - remove file `/etc/resolv.conf`
+        ```bash
+        sudo rm /etc/resolv.conf
+        ```
+    - Create a Symlink to replace `/etc/resolv.conf`
+        ```bash
+        sudo ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf
+        ```
+10. Clean System
     ```bash
     rm -rf /etc/ssh/ssh_host_*
     ```
@@ -47,4 +76,4 @@
     ```bash
     cloud-init clean
     ```
-10. Power Off the System
+11. Power Off the System
