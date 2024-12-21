@@ -6,7 +6,7 @@
         - password does not matter
 2. Install cloud-init
     ```bash
-    apt install cloud-init
+    sudo apt install cloud-init
     ```
 3. Specify datasources
     ```bash
@@ -14,24 +14,24 @@
     ```
 4. Enable Services
     ```bash
-    systemctl enable cloud-init
+    sudo systemctl enable cloud-init
     ```
     ```bash
-    systemctl enable cloud-init-local
+    sudo systemctl enable cloud-init-local
     ```
     ```bash
-    systemctl enable cloud-init-network
+    sudo systemctl enable cloud-init-network
     ```
     ```bash
-    systemctl enable cloud-final
+    sudo systemctl enable cloud-final
     ```
 5. Set Sudo privileges
     ```bash
     echo "ansible ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/ansible
     ```
 6. SSHD Config
-    - `PasswordAuthentication no`
     - `PermitRootLogin no`
+    - `PasswordAuthentication no`
 7. Create a rule in `/etc/security/access.conf`
     ```bash
     echo "-:ansible:LOCAL" | sudo tee -a /etc/security/access.conf
