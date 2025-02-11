@@ -297,13 +297,13 @@ sudo apt install phpldapadmin
     ```bash
     sudo apt install nginx
     ```
-- enable nginx
+- enable and start nginx
     ```bash
-    sudo systemctl enable nginx
+    sudo systemctl enable --now nginx
     ```
-- start nginx
+- install needed php module
     ```bash
-    sudo systemctl start nginx
+    sudo apt install php8.2-fpm
     ```
 - add a `redirect_to_https.conf` to `/etc/nginx/sites-available`
     ```
