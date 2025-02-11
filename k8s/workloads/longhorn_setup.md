@@ -1,9 +1,20 @@
 # How to install and setup longhorn
 Refer to the [official Doc's](https://longhorn.io/docs/1.6.2/) for more information.
 
-Check the status of your Cluster by running this script:
+<p style="color:red">[DEPRECATED]</p>Check the status of your Cluster by running this script:
 ```
 curl -sSfL https://raw.githubusercontent.com/longhorn/longhorn/v1.6.2/scripts/environment_check.sh | bash
+```
+
+Check the status of your Cluster using `longhornctl`
+```bash
+curl -sSfL -o longhornctl https://github.com/longhorn/cli/releases/download/v1.8.0/longhornctl-linux-amd64
+```
+```bash
+chmod +x ./longhornctl
+```
+```bash
+longhornctl --kube-config </path/to/kube-config> check preflight
 ```
 
 ## Requirements
